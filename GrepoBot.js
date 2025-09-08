@@ -1,292 +1,29 @@
+class GrepoBotConfig
+    {
+        DoTriumph=false;
+        DoGames=false;
+        DoTheater=false;
+        DoParty=false;
+        DoTrade=false;
+        DoTasks=false;
+        DoSpam=false;
+        DoQueue=false;
+        Groups = new Array(0);
+    }
 class GrepoBot {
+    Config;
     UseBot = true;
     BotSuccessOnce = false;
     wwMode=true;
     Groups = new Array(0);
-    constructor() {
+    constructor(config) {
+        Config=config||new GrepoBotConfig;
         //Add World/player combo
         var SpamDestinations={TinyAlpaca:{de155:13722,de157:3428},suchtla95:{}};
 
 
         window.GrepoBot = this;
-        var destination=SpamDestinations[Game.player_name][Game.world_id];
-        var selfBashGroup="Keine Gruppe";
-        if(destination==undefined &&!this.wwMode)
-        {
-            selfBashGroup="selfbash"
-            this.Groups[this.Groups.length]= new GroupTownTasks("Keine Gruppe")
-                .AddBuilding("market", 6)
-                .AddResearch("booty")
-                .AddResearch("pottery")
-                .AddBuilding("main", 24)
-                .AddBuilding("storage", 23)
-                .AddBuilding("hide", 5)
-                .AddBuilding("storage", 24)
-                .AddResearch("instructor")
-                .AddResearch("conscription")
-                .AddBuilding("docks", 10)
-                .AddBuilding("storage", 25)
-                .AddBuilding("hide", 10)
-                .AddResearch("colonize_ship")
-                .AddResearch("plow")
-                .AddResearch("bireme")
-                .AddBuilding("academy", 30)
-                .AddResearch("combat_experience")
-                .AddResearch("strong_wine")
-                .AddBuilding("theater", 1)
-                .AddBuilding("trade_office", 1)
-                .AddBuilding("storage", 35)
-                .AddUnits(1, { "colonize_ship": 1 })
-                .AddFarmUnit("sword")
-                .AddBuilding("farm", 45)
-            .AddResearch("take_over")
-        }
-        var wwGroups=new Array("WW Gunstlager","WW allgemein","Keine Gruppe","WW Gruppe 1","WW Gruppe 2","WW Gruppe 3");
-        if(this.wwMode)
-        {
-                this.Groups[this.Groups.length]=new GroupTownTasks("WW FeindInsel")
-                .AddDeconstruction("trade_office",0)
-                .AddDeconstruction("theater",0)
-                .AddBuilding("market", 6)
-                .AddResearch("booty")
-                .AddResearch("pottery")
-                .AddBuilding("main", 24)
-                .AddBuilding("storage", 23)
-                .AddBuilding("hide", 5)
-                .AddBuilding("storage", 24)
-                .AddResearch("conscription")
-                .AddBuilding("docks", 10)
-                .AddBuilding("storage", 25)
-                .AddBuilding("wall", 25)
-                .AddResearch("colonize_ship")
-                .AddResearch("catapult")
-                .AddResearch("plow")
-                .AddResearch("bireme")
-                .AddResearch("cartography")
-                .AddBuilding("academy", 30)
-                .AddResearch("combat_experience")
-                .AddResearch("strong_wine")
-                .AddBuilding("storage", 35)
-                .AddBuilding("storage", 35)
-                .AddBuilding("statue", 1)
-                .AddBuilding("thermal", 1)
-                .AddFarmUnit("sword")
-                .AddBuilding("farm", 45)
-                .AddBuilding("docks", 30)
-                .AddBuilding("stoner", 40)
-                .AddBuilding("ironer", 40)
-                .AddBuilding("lumber", 40)
-                .AddBuilding("temple", 30)
-                .AddBuilding("market", 30)
-                .AddBuilding("statue", 1)
-                .AddBuilding("thermal", 1)
-            .AddResearch("take_over");
-
-            for(var i=0; i < wwGroups.length;i++)
-            {
-                var groupName=wwGroups[i];
-                var group=new GroupTownTasks(groupName)
-                .AddDeconstruction("trade_office",0)
-                .AddDeconstruction("theater",0)
-                .AddBuilding("market", 6)
-                .AddResearch("booty")
-                .AddResearch("pottery")
-                .AddBuilding("main", 24)
-                .AddBuilding("storage", 23)
-                .AddBuilding("hide", 5)
-                .AddBuilding("storage", 24)
-                .AddResearch("conscription")
-                .AddBuilding("docks", 10)
-                .AddBuilding("storage", 25)
-                .AddBuilding("hide", 10)
-                .AddResearch("colonize_ship")
-                .AddResearch("catapult")
-                .AddResearch("plow")
-                .AddResearch("bireme")
-                .AddResearch("cartography")
-                .AddBuilding("academy", 30)
-                .AddResearch("combat_experience")
-                .AddResearch("strong_wine")
-                .AddBuilding("storage", 35)
-                .AddBuilding("storage", 35)
-                .AddBuilding("statue", 1)
-                .AddBuilding("thermal", 1)
-                .AddFarmUnit("sword")
-                .AddBuilding("farm", 45)
-                .AddBuilding("docks", 30)
-                .AddBuilding("stoner", 40)
-                .AddBuilding("ironer", 40)
-                .AddBuilding("lumber", 40)
-                .AddBuilding("temple", 30)
-                .AddBuilding("market", 30)
-                .AddBuilding("statue", 1)
-                .AddBuilding("thermal", 1)
-            .AddResearch("take_over");
-
-                if(groupName=="WW Gunstlager")
-                {
-                    group.AddDeconstruction("barracks",1);
-                }
-                else
-                {
-                    //group.AddBuilding("barracks",30);
-                }
-                this.Groups[this.Groups.length]=group;
-            }
-        }
-
-        this.Groups[this.Groups.length]= new GroupTownTasks(selfBashGroup)
-            .AddBuilding("market", 6)
-            .AddResearch("booty")
-            .AddResearch("pottery")
-            .AddBuilding("main", 24)
-            .AddBuilding("storage", 23)
-            .AddBuilding("hide", 5)
-            .AddBuilding("storage", 24)
-            .AddResearch("instructor")
-            .AddResearch("conscription")
-            .AddBuilding("docks", 10)
-            .AddBuilding("storage", 25)
-            .AddBuilding("hide", 10)
-            .AddResearch("colonize_ship")
-            .AddResearch("catapult")
-            .AddResearch("plow")
-            .AddResearch("cartography")
-            .AddBuilding("academy", 30)
-            .AddResearch("combat_experience")
-            .AddResearch("strong_wine")
-            .AddBuilding("storage", 35)
-            .AddBuilding("theater", 1)
-            .AddBuilding("storage", 35)
-            .AddBuilding("trade_office", 1)
-            .AddUnits(1, { "colonize_ship": 1 })
-            .AddUnits(2, { "big_transporter": 200, "catapult": 300 })
-            .AddSpamAttack(destination, { "big_transporter": 2, "catapult": 3 })
-            .AddFarmUnit("sword")
-            .AddBuilding("farm", 45)
-            .AddBuilding("barracks",30)
-            .AddBuilding("docks", 30)
-            .AddBuilding("stoner", 40)
-            .AddBuilding("ironer", 40)
-            .AddBuilding("lumber", 40)
-            .AddBuilding("temple", 30)
-            .AddBuilding("market", 30)
-            .AddResearch("take_over");
-
-
-        this.Groups[this.Groups.length]= new GroupTownTasks("DEFF")
-            .AddDeconstruction("thermal",0)
-            .AddBuilding("market", 6)
-            .AddResearch("archer")
-            .AddResearch("booty")
-            .AddResearch("pottery")
-            .AddBuilding("main", 24)
-            .AddBuilding("storage", 23)
-            .AddBuilding("hide", 5)
-            .AddBuilding("storage", 24)
-            .AddResearch("instructor")
-            .AddResearch("conscription")
-            .AddResearch("chariot")
-            .AddBuilding("docks", 10)
-            .AddBuilding("storage", 25)
-            .AddBuilding("hide", 10)
-            .AddResearch("colonize_ship")
-            .AddResearch("plow")
-                .AddResearch("bireme")
-            .AddResearch("small_transporter")
-            .AddResearch("berth")
-            .AddBuilding("academy", 30)
-            .AddResearch("combat_experience")
-            .AddResearch("strong_wine")
-            .AddBuilding("storage", 35)
-            .AddBuilding("theater", 1)
-            .AddBuilding("trade_office", 1)
-        .AddUnits(1, { "colonize_ship": 1 })
-        .AddUnits(2, { "small_transporter": 70,"sword":800, "archer": 320 })
-        .AddUnits(3, { "small_transporter": 128,"chariot":232 })
-            .AddFarmUnit("sword")
-            .AddBuilding("farm", 45)
-            .AddBuilding("barracks",30)
-            .AddBuilding("docks", 30)
-            .AddBuilding("stoner", 40)
-            .AddBuilding("ironer", 40)
-            .AddBuilding("lumber", 40)
-            .AddBuilding("temple", 30)
-            .AddBuilding("market", 30)
-            .AddResearch("take_over")
-        //.AddDeconstruction("academy",30);
-
-        this.Groups[this.Groups.length]=new GroupTownTasks("SOFF")
-            .AddBuilding("market", 6)
-            .AddResearch("booty")
-            .AddResearch("pottery")
-        //  .AddBuilding("main", 24)
-            .AddBuilding("storage", 10)
-            .AddBuilding("storage", 23)
-            .AddBuilding("hide", 5)
-            .AddBuilding("storage", 25)
-            .AddBuilding("docks", 10)
-            .AddBuilding("hide", 10)
-            .AddResearch("shipwright")
-            .AddResearch("attack_ship")
-            .AddResearch("plow")
-            .AddBuilding("academy", 30)
-            .AddResearch("shipwright")
-            .AddResearch("mathematics")
-            .AddResearch("cartography")
-            .AddResearch("ram")
-            .AddResearch("combat_experience")
-            .AddResearch("strong_wine")
-            .AddBuilding("thermal", 1)
-            .AddBuilding("farm", 45)
-            .AddBuilding("docks", 30)
-            .AddBuilding("storage", 35)
-            .AddDeconstruction("academy",30)
-            .AddDeconstruction("stoner", 1)
-            .AddDeconstruction("ironer", 1)
-            .AddDeconstruction("lumber", 1)
-            .AddDeconstruction("barracks", 1)
-            .AddDeconstruction("main", 11)
-            .AddResearch("colonize_ship")
-            .AddResearch("take_over")
-            .AddUnits(1, { "attack_ship": 500 });
-
-        this.Groups[this.Groups.length]=new GroupTownTasks("flying")
-            .AddBuilding("market", 6)
-            .AddResearch("meteorology")
-            .AddResearch("booty")
-            .AddResearch("pottery")
-        // .AddBuilding("main", 24)
-            .AddBuilding("storage", 10)
-            .AddResearch("instructor")
-            .AddBuilding("temple",15)
-            .AddBuilding("barracks",20)
-            .AddBuilding("storage", 23)
-            .AddBuilding("hide", 5)
-            .AddBuilding("storage", 25)
-            .AddBuilding("hide", 10)
-            .AddResearch("plow")
-            .AddBuilding("academy", 30)
-            .AddBuilding("temple",15)
-            .AddResearch("temple_looting")
-            .AddResearch("divine_selection")
-            .AddResearch("combat_experience")
-            .AddResearch("strong_wine")
-            .AddBuilding("thermal", 1)
-            .AddBuilding("farm", 45)
-            .AddBuilding("storage", 35)
-            .AddDeconstruction("academy",30)
-            .AddDeconstruction("stoner", 1)
-            .AddDeconstruction("ironer", 1)
-            .AddResearch("colonize_ship")
-            .AddDeconstruction("lumber", 1)
-            .AddDeconstruction("main", 11)
-            .AddDeconstruction("docks",1)
-            .AddSpecialUnit("manticore")
-            .AddSpecialUnit("harpy")
-            .AddSpecialUnit("ladon")
-            .AddResearch("take_over")
-            .AddSpecialUnit("griffin");
+        
 
 
 
@@ -295,6 +32,23 @@ class GrepoBot {
         this.SubscribeToGod("hera");
         this.SubscribeToGod("artemis");
 
+    }
+    async Init()
+    {
+        var DoIt = function () {
+            setTimeout(DoIt, 602000);
+            this.RunBot();
+        }
+        var DoItQueue = function () {
+            setTimeout(DoItQueue, 10000);
+            if(!config.DoQueue)
+            {
+                return;
+            }
+            this.CheckQueue();
+        }
+        DoIt()
+        DoItQueue();
     }
     async CheckQueue()
     {
