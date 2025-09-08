@@ -83,9 +83,8 @@ class GrepoBot {
             var massRecruit={};
             var groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:this.Config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
             var doRecruit=false;
-            for (var i = 0; i < towns.length; i++) {
-                try {
-                    var town=towns[i];
+            for (const town of towns) {
+                try {;
                     if(us.any(MM.getModels().Takeover,x=>x.attributes.destination_town.id==town.id))
                     {
                         console.info("conquest "+town.id+" "+town.attributes.name)
