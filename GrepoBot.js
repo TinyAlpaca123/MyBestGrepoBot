@@ -1,3 +1,4 @@
+'use strict';
 class GrepoBotConfig
     {
         DoTriumph=false;
@@ -80,7 +81,7 @@ class GrepoBot {
             }
             var towns = ITowns.towns_collection.map(x => x);
             var massRecruit={};
-            var groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
+            var groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:this.Config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
             var doRecruit=false;
             for (var i = 0; i < towns.length; i++) {
                 try {
@@ -92,7 +93,7 @@ class GrepoBot {
                     var group
                     if(groups.length==0)
                     {
-                        group={tasks:config.Groups[0]};
+                        group={tasks:this.Config.Groups[0]};
                     }
                     else
                     {
