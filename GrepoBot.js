@@ -45,8 +45,8 @@ class GrepoBot {
     }
     async Init()
     {
-        DoIt();
-        DoItQueue();
+        this.DoIt();
+        this.DoItQueue();
     }
     async CheckQueue()
     {
