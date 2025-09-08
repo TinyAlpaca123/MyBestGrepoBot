@@ -21,12 +21,8 @@ class GrepoBot {
         //Add World/player combo
         var SpamDestinations={TinyAlpaca:{de155:13722,de157:3428},suchtla95:{}};
 
-
         window.GrepoBot = this;
         
-
-
-
         this.SubscribeToGod("ares");
         this.SubscribeToGod("zeus");
         this.SubscribeToGod("hera");
