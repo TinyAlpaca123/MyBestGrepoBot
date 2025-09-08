@@ -17,7 +17,7 @@ class GrepoBot {
     wwMode=true;
     Groups = new Array(0);
     constructor(config) {
-        Config=config||new GrepoBotConfig;
+        Config=config||new GrepoBotConfig();
         //Add World/player combo
         var SpamDestinations={TinyAlpaca:{de155:13722,de157:3428},suchtla95:{}};
 
