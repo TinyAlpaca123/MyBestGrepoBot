@@ -15,7 +15,6 @@ class GrepoBot {
     UseBot = true;
     BotSuccessOnce = false;
     wwMode=true;
-    Groups = new Array(0);
     constructor(config) {
         this.Config=config||new GrepoBotConfig();
         //Add World/player combo
@@ -31,12 +30,12 @@ class GrepoBot {
     }
     async DoIt()
     {
-        setTimeout(DoIt, 602000);
+        setTimeout(this.DoIt, 602000);
         this.RunBot();
     }
     async DoItQueue()
     {
-        setTimeout(DoItQueue, 10000);
+        setTimeout(this.DoItQueue, 10000);
         if(!config.DoQueue)
         {
             return;
@@ -81,7 +80,7 @@ class GrepoBot {
             }
             var towns = ITowns.towns_collection.map(x => x);
             var massRecruit={};
-            var groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:this.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
+            var groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
             var doRecruit=false;
             for (var i = 0; i < towns.length; i++) {
                 try {
@@ -93,7 +92,7 @@ class GrepoBot {
                     var group
                     if(groups.length==0)
                     {
-                        group={tasks:this.Groups[0]};
+                        group={tasks:config.Groups[0]};
                     }
                     else
                     {
