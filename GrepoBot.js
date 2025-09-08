@@ -29,21 +29,23 @@ class GrepoBot {
         this.SubscribeToGod("artemis");
 
     }
+    async DoIt()
+    {
+        setTimeout(DoIt, 602000);
+        this.RunBot();
+    }
+    async DoItQueue()
+    {
+        setTimeout(DoItQueue, 10000);
+        if(!config.DoQueue)
+        {
+            return;
+        }
+        this.CheckQueue();
+    }
     async Init()
     {
-        var DoIt = function () {
-            setTimeout(DoIt, 602000);
-            this.RunBot();
-        }
-        var DoItQueue = function () {
-            setTimeout(DoItQueue, 10000);
-            if(!config.DoQueue)
-            {
-                return;
-            }
-            this.CheckQueue();
-        }
-        DoIt()
+        DoIt();
         DoItQueue();
     }
     async CheckQueue()
