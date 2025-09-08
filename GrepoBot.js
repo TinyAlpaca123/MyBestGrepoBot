@@ -894,3 +894,5 @@ class GroupTownTasks {
         }
         return retVal;
     }
+}
+
