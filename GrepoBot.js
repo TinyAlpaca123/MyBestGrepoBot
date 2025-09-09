@@ -323,8 +323,7 @@ class GrepoBot {
                 overFlow[res]=overRes;
                 totalOverFlow+=overRes;
             }
-            return
-            {
+            return{
                 town:town,
                 limits:limits,
                 resourcesAfterMovement:resources,
