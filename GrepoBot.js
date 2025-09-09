@@ -19,7 +19,7 @@ class GrepoBot {
     constructor(config) {
         this.Config=config||new GrepoBotConfig();
         //Add World/player combo
-        var SpamDestinations={TinyAlpaca:{de155:13722,de157:3428},suchtla95:{}};
+        let SpamDestinations={TinyAlpaca:{de155:13722,de157:3428},suchtla95:{}};
 
         window.GrepoBot = this;
         
@@ -53,9 +53,9 @@ class GrepoBot {
         if (this.UseBot == false || document.getElementById("recaptcha_window") !== null) {
             return;
         }
-        var finishBuildOrder=async function(order){
+        let finishBuildOrder=async function(order){
 
-            var data={
+            let data={
                 "model_url": "BuildingOrder/"+order.attributes.id,
                 "action_name": "buyInstant",
                 "arguments":{"order_id":order.attributes.id},
@@ -79,17 +79,18 @@ class GrepoBot {
             if (this.UseBot == false || document.getElementById("recaptcha_window") !== null) {
                 return;
             }
-            var towns = ITowns.towns_collection.map(x => x);
-            var massRecruit={};
-            var groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:this.Config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
-            var doRecruit=false;
-            for (const town of towns) {
+            let towns = ITowns.towns_collection.map(x => x);
+            let massRecruit={};
+            let groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:this.Config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
+            let doRecruit=false;
+            let resourceLimits=towns.map(x=>{return {townId:x.id,minwood:1450,minstone:1750,miniron:1450,maxwood:1700,maxstone:2000,maxiron:1700}})
+            for (let town of towns) {
                 try {;
                     if(us.any(MM.getModels().Takeover,x=>x.attributes.destination_town.id==town.id))
                     {
                         console.info("conquest "+town.id+" "+town.attributes.name)
                     }
-                    var group
+                    let group;
                     if(groups.length==0)
                     {
                         group={tasks:this.Config.Groups[0]};
@@ -103,12 +104,30 @@ class GrepoBot {
                             continue;
                         }
                     }
-                    var recruit=await group.tasks.CheckTasks(town);
-                    if(recruit)
+                    let result=await group.tasks.CheckTasks(town);
+                     
+                    if(result.Units)
                     {
                         doRecruit=true;
-                        massRecruit[town.id]=recruit;
+                        massRecruit[town.id]=result.Units;
                     }
+                     if(!result.TasksDone)
+                     {
+                         let limit=resourceLimits.find(x=>x.townId=town.id);
+                         let minValue=town.attributes.storage*0.8;
+                         let maxValue=town.attributes.storage*0.9;
+                         if(town.attributes.storage<20000)
+                         {
+                            minValue=town.attributes.storage*0.9;
+                            maxValue=town.attributes.storage;
+                         }
+                         limit.minwood=minValue;
+                         limit.minstone=minValue;
+                         limit.miniron=minValue;
+                         limit.maxwood=maxValue;
+                         limit.maxstone=maxValue;
+                         limit.maxiron=maxValue;
+                     }
                 } catch (ex) {
                     console.error(ex);
 
@@ -123,7 +142,7 @@ class GrepoBot {
             await this.BuildFarmTowns();
             await this.FarmTown();
             await this.StartCelebrations(Game.player_name=="suchtla95"&&false, false, false,true);
-            await this.TradeInternal();
+            await this.TradeInternal(resourceLimits);
             this.BotSuccessOnce=true;
         }
         catch (ex) {
@@ -140,14 +159,14 @@ class GrepoBot {
         {
             return;
         }
-        var towns=us.map(us.find(ITowns.townGroups.getGroups(),x=>x.name=="flying")?.towns,x=>ITowns.towns[x.id])?.filter(x=>x.god()==god);
+        let towns=us.map(us.find(ITowns.townGroups.getGroups(),x=>x.name=="flying")?.towns,x=>ITowns.towns[x.id])?.filter(x=>x.god()==god);
         if(towns===undefined)
         {
             return;
         }
-        for(var j=0;j<towns.length;j++)
+        for(let j=0;j<towns.length;j++)
         {
-            var town=ITowns.towns_collection._byId[towns[j].id];
+            let town=ITowns.towns_collection._byId[towns[j].id];
 
             if(await this.TryRecruitSpecialUnits(town,god,favor))
             {
@@ -158,14 +177,14 @@ class GrepoBot {
     }
     SubscribeToGod(god)
     {
-        var gods=us.find(MM.getModels().PlayerGods,x=>true);
+        let gods=us.find(MM.getModels().PlayerGods,x=>true);
         this.OnFavorChanged(god,gods.attributes[god+"_favor"]);
         gods.onGodFavorChange(gods,god,(x,y,z)=>this.OnFavorChanged(god,y))
     }
 
     async TryRecruitSpecialUnits(town,god,favor)
     {
-        var unitInfo=Object.entries(GameData.units).find(x=>x[1].flying&&x[1].god_id==god)[1];
+        let unitInfo=Object.entries(GameData.units).find(x=>x[1].flying&&x[1].god_id==god)[1];
         if(unitInfo===undefined)
         {
             return false;
@@ -174,8 +193,8 @@ class GrepoBot {
         {
             return;
         }
-        var buildingDependencies=Object.entries(unitInfo.building_dependencies??{});
-        for(var j=0;j<buildingDependencies.length;j++)
+        let buildingDependencies=Object.entries(unitInfo.building_dependencies??{});
+        for(let j=0;j<buildingDependencies.length;j++)
         {
             if(town.getBuildings().getBuildingLevel(buildingDependencies[j][0])<buildingDependencies[j][1])
             {
@@ -183,13 +202,13 @@ class GrepoBot {
                 return false;
             }
         }
-        var existingCount=unitInfo.is_naval?ITowns.towns[town.id].getUnitOrdersCollection().getNavalUnitOrdersCount():ITowns.towns[town.id].getUnitOrdersCollection().getGroundUnitOrdersCount();
+        let existingCount=unitInfo.is_naval?ITowns.towns[town.id].getUnitOrdersCollection().getNavalUnitOrdersCount():ITowns.towns[town.id].getUnitOrdersCollection().getGroundUnitOrdersCount();
         if(existingCount>=6)
         {
             return false;
         }
 
-        var amount=Math.floor(favor/unitInfo.favor);
+        let amount=Math.floor(favor/unitInfo.favor);
         if(amount>Math.floor(town.getAvailablePopulation()/unitInfo.population))
         {
             amount=Math.floor(town.getAvailablePopulation()/unitInfo.population);
@@ -246,7 +265,7 @@ class GrepoBot {
         });
     };
     async FarmTown() {
-        var towns = ITowns.towns_collection.filter(function (x) {
+        let towns = ITowns.towns_collection.filter(function (x) {
             if (x.attributes.storage < 10000) {
                 return (x.attributes.storage * 3 - x.attributes.resources.iron - x.attributes.resources.wood - x.attributes.resources.stone) > 100;
             }
@@ -263,18 +282,119 @@ class GrepoBot {
                                  );
         }
     }
-    async TradeInternal() {
-        var allMovements = JSON.parse(await gpAjax.ajaxGet('town_overviews', 'trade_overview')).json;
-        var movements = JSON.parse(await gpAjax.ajaxGet('town_overviews', 'trade_overview')).json.movements.map(function (x) {
-            var to = JSON.parse(atob(x.to.link.split('#')[1].split('"')[0]));
+    async TradeInternal(resourceLimits) {
+        let resources=new Array("wood","iron","stone");
+        let allMovements = JSON.parse(await gpAjax.ajaxGet('town_overviews', 'trade_overview')).json;
+        let movements = JSON.parse(await gpAjax.ajaxGet('town_overviews', 'trade_overview')).json.movements.map(function (x) {
+            let to = JSON.parse(atob(x.to.link.split('#')[1].split('"')[0]));
             x.idTo=to.id;
             return x;
 
         });
+        let townData=ITowns.towns_collection.map(town=>{
+            const resources=town.attributes.resources;
+            movements.filter(x=>x.idTo==town.id).forEach(x=>
+                {
+                    for(let res in resources)
+                    {
+                        resources[res]+=x.res[res]
+                    }
+                });
+            let limits=resourceLimits.find(x=>x.townId=town.id);
+            let overFlow={};
+            let needed={};
+            let totalOverFlow=0;
+            let totalNeeded=0
+            for(let res in resources)
+            {
+                let needRes=resources[res]-limits["min"+res];
+                if(needRes<500)
+                {
+                    needRes=0;
+                }
+                needed[res]=needRes;
+                totalNeeded+=needRes;
+                
+                let overRes=resources[res]-limits["max"+res];
+                 if(overRes<500)
+                {
+                    overRes=0;
+                }
+                overFlow[res]=overRes;
+                totalOverFlow+=overRes;
+            }
+            return
+            {
+                town:town,
+                limits:limits,
+                resourcesAfterMovement:resources,
+                needed:needed,
+                overFlow:overFlow,
+                totalOverFlow:totalOverFlow,
+                totalNeeded:totalNeeded
+            }
+        });
 
-        var giveWood = ITowns.towns_collection.filter(function (x) {
-            var tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
-            var wood = x.attributes.resources.wood;
+        const getDistance=(function(town1, town2) {
+          const dx = town1.attributes.abs_x - town2.attributes.abs_x;
+          const dy = town1.attributes.abs_y - town2.attributes.abs_y;
+          return Math.sqrt(dx * dx + dy * dy);
+        });
+
+        const SendResourcesFromTown=(async function(town,allTowns)
+            {
+                 let resources=new Array("wood","iron","stone");
+                 var townsWithDistance=[...allTowns].filter(x=>x.town!=town.town)
+                    .sort((a, b) => {
+                      return getDistance(townData.town, a.town) - getDistance(townData.town, b.town);
+                    });
+                for(let townReceive in townsWithDistance)
+                {
+                    let resources=new Array("wood","iron","stone");
+                    let totalSend=0;
+                    let sendRes={};
+                    for(let res in resources)
+                    {
+                        if(townReceive.needed[res]>0&&town.overFlow[res]>0)
+                        {
+                            sendRes[res]=townReceive.needed[res];
+                            if(town.overFlow[res]<sendRes[res])
+                            {
+                                sendRes[res]=town.overFlow[res];
+                            }
+                            totalSend+=sendRes[res];
+                        }
+                    }
+                    if(totalSend>0)
+                    {
+                        if(totalSend>town.attributes.available_trade_capacity)
+                        {
+                            for(let res in resources)
+                            {
+                                sendRes[res]=sendRes[res]/toatlSend*town.attributes.available_trade_capacity;
+                            }
+                        }
+                        for(let res in resources)
+                        {
+                            sendRes[res]=Math.floor(sendRes[res]/toatlSend*town.attributes.available_trade_capacity);
+                        }
+                        sendRes.id=townReceive.id;
+                        sendRes.town_id=town.id;
+                        await gpAjax.ajaxPost('town_info', 'trade',sendRes);
+                        return;
+                    }
+                }
+            });
+        let giveTowns=townData.filter(x=>x.totalOverFlow>0);
+        let receiveTowns=allTowns.filter(x=>x.totalNeeded>0);
+        for(let town in giveTows)
+            {
+               await SendResourcesFromTown(town,receiveTowns)
+            }
+        return;
+        let giveWood = ITowns.towns_collection.filter(function (x) {
+            let tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
+            let wood = x.attributes.resources.wood;
             tradeMovements.forEach(trade => {
                 wood += trade.res.wood;
 
@@ -291,7 +411,7 @@ class GrepoBot {
 
         }
                                                      ).map(function (x) {
-            var amount = x.attributes.resources.wood - 20000;
+            let amount = x.attributes.resources.wood - 20000;
             if (x.attributes.available_population > 100) {
                 amount = x.attributes.resources.wood - 24000;
 
@@ -304,7 +424,7 @@ class GrepoBot {
         }
                                                                 );
 
-        var getWood = ITowns.towns_collection.filter(function (x) {
+        let getWood = ITowns.towns_collection.filter(function (x) {
             if (x.attributes.storage < 18000) {
                 return x.wood < (x.attributes.storage - 2000);
 
@@ -319,7 +439,7 @@ class GrepoBot {
             return { id: x.id, amount: 18000 - x.wood, town: x };
         }
                                                          );
-        for (var i = 0; i < giveWood.length; i++) {
+        for (let i = 0; i < giveWood.length; i++) {
             if (getWood.length == 0) {
                 continue;
 
@@ -328,9 +448,9 @@ class GrepoBot {
                 return y.amount - x.amount
             }
                                   );
-            var getIt = getWood[0];
-            var send = giveWood[i];
-            var amount = send.town.attributes.max_trade_capacity / 3;
+            let getIt = getWood[0];
+            let send = giveWood[i];
+            let amount = send.town.attributes.max_trade_capacity / 3;
             if (amount <= 1000) {
                 amount = send.town.attributes.max_trade_capacity;
 
@@ -360,9 +480,9 @@ class GrepoBot {
 
         }
 
-        var giveStone = ITowns.towns_collection.filter(function (x) {
-            var tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
-            var stone = x.attributes.resources.stone;
+        let giveStone = ITowns.towns_collection.filter(function (x) {
+            let tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
+            let stone = x.attributes.resources.stone;
             tradeMovements.forEach(trade => {
                 stone += trade.res.stone;
 
@@ -380,7 +500,7 @@ class GrepoBot {
 
         }
                                                       ).map(function (x) {
-            var amount = x.attributes.resources.stone - 20000;
+            let amount = x.attributes.resources.stone - 20000;
             if (x.attributes.available_population > 100) {
                 amount = x.attributes.resources.stone - 24000;
 
@@ -389,7 +509,7 @@ class GrepoBot {
 
         }
                                                            ).sort(function (x, y) { return y.amount - x.amount });
-        var getStone = ITowns.towns_collection.filter(function (x) {
+        let getStone = ITowns.towns_collection.filter(function (x) {
             if (x.attributes.storage < 18000) {
                 return x.stone < (x.attributes.storage - 2000);
 
@@ -444,9 +564,9 @@ class GrepoBot {
 
         }
 
-        var giveIron = ITowns.towns_collection.filter(function (x) {
-            var tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
-            var iron = x.attributes.resources.iron;
+        let giveIron = ITowns.towns_collection.filter(function (x) {
+            let tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
+            let iron = x.attributes.resources.iron;
             tradeMovements.forEach(trade => {
                 iron += trade.res.iron;
 
@@ -464,7 +584,7 @@ class GrepoBot {
 
         }
                                                      ).map(function (x) {
-            var amount = x.attributes.resources.iron - 20000;
+            let amount = x.attributes.resources.iron - 20000;
             if (x.attributes.available_population > 100) {
                 amount = x.attributes.resources.iron - 24000;
 
@@ -477,7 +597,7 @@ class GrepoBot {
         }
                                                                 );
         ;
-        var getIron = ITowns.towns_collection.filter(function (x) {
+        let getIron = ITowns.towns_collection.filter(function (x) {
             if (x.attributes.storage < 18000) {
                 return x.iron < (x.attributes.storage - 2000);
 
@@ -556,9 +676,9 @@ class GroupTask {
 
     async CheckDeconstruct(town,choice,level)
     {
-        var buildData = town.getBuildingBuildData(() => false);
+        let buildData = town.getBuildingBuildData(() => false);
 
-        var buildingLevel=town.buildings().attributes[choice];
+        let buildingLevel=town.buildings().attributes[choice];
 
         if ((buildingLevel-us.filter(MM.getModels().BuildingOrder,order=>order.attributes.town_id==town.id&&order.attributes.tear_down&&order.attributes.building_type==choice).length) <= level) {
             return { needed: false, done: false };
@@ -587,9 +707,9 @@ class GroupTask {
         {
             return { needed: false, done: false };
         }
-        var research = GameData.researches[choice];
-        var buildingReq = Object.entries(research.building_dependencies);
-        for (var i = 0; i < buildingReq.length; i++) {
+        let research = GameData.researches[choice];
+        let buildingReq = Object.entries(research.building_dependencies);
+        for (let i = 0; i < buildingReq.length; i++) {
             if (town.buildings().getBuildingLevel(buildingReq[i][0]) < buildingReq[i][1]) {
                 return this.CheckBuilding(town, buildingReq[i][0], buildingReq[i][1]);
             }
@@ -597,7 +717,7 @@ class GroupTask {
         if (this.GetFreeResearch(town) < research.research_points) {
             return { needed: false, done: false };
         }
-        var townRes = town.getResources();
+        let townRes = town.getResources();
         if (research.resources.wood > townRes.wood || research.resources.iron > townRes.iron || research.resources.stone > townRes.stone) {
             return { needed: true, done: false };
         }
@@ -613,25 +733,25 @@ class GroupTask {
         return { needed: true, done: true };
     }
     GetFreeResearch(town) {
-        var totalResearchPoints = town.buildings().getBuildingLevel("academy") * GameDataResearches.getResearchPointsPerAcademyLevel();
-        var researches = town.researches();
-        var usedResearchPoints = Object.entries(GameData.researches).filter(x => researches.hasResearch(x[0])).map(x => x[1].research_points).reduce((partialSum, a) => partialSum + a, 0);
+        let totalResearchPoints = town.buildings().getBuildingLevel("academy") * GameDataResearches.getResearchPointsPerAcademyLevel();
+        let researches = town.researches();
+        let usedResearchPoints = Object.entries(GameData.researches).filter(x => researches.hasResearch(x[0])).map(x => x[1].research_points).reduce((partialSum, a) => partialSum + a, 0);
         return totalResearchPoints - usedResearchPoints;
     }
     async CheckBuilding(town, choice, level) {
 
-        var buildData = town.getBuildingBuildData(() => false);
-        var buildingData=buildData.getBuildingData();
+        let buildData = town.getBuildingBuildData(() => false);
+        let buildingData=buildData.getBuildingData();
         if(buildingData===undefined)
         {
-            var levelIs=town.buildings().attributes[choice];
+            let levelIs=town.buildings().attributes[choice];
             if(levelIs>=level)
             {
                 return { needed: false, done: false };
             }
             return { needed: true, done: false, canRecruit: true };
         }
-        var building = buildingData[choice];
+        let building = buildingData[choice];
         if (building.level >= level) {
             return { needed: false, done: false };
         }
@@ -682,7 +802,7 @@ class GroupTask {
                 return { needed: true, done: false };
             }
         }
-        var missing = Object.entries(building.missing_dependencies);
+        let missing = Object.entries(building.missing_dependencies);
         if (missing.length > 0) {
             return await this.CheckBuilding(town, missing[0][0], missing[0][1].needed_level);
         }
@@ -690,8 +810,8 @@ class GroupTask {
         {
             return { needed: false, done: false };
         }
-        var costs=Object.entries(building.resources_for);
-        for(var i=0;i<costs.length;i++)
+        let costs=Object.entries(building.resources_for);
+        for(let i=0;i<costs.length;i++)
         {
             if(town.attributes[costs[i][0]]<costs[i][1])
             {
@@ -752,22 +872,22 @@ class GroupTownTasks {
         return this;
     }
     async CheckSpamAttacks(town) {
-        for (var i = 0; i < this.SpamAttacks.length; i++) {
-            var attacksToSend = 10;
-            var spam = this.SpamAttacks[i];
-            var unitsInTown = ITowns.towns[town.id].units();
-            var unitsInOrder = Object.entries(spam.units);
+        for (let i = 0; i < this.SpamAttacks.length; i++) {
+            let attacksToSend = 10;
+            let spam = this.SpamAttacks[i];
+            let unitsInTown = ITowns.towns[town.id].units();
+            let unitsInOrder = Object.entries(spam.units);
 
-            for (var j = 0; j < unitsInOrder.length; j++) {
-                var unitCount = unitsInTown[unitsInOrder[j][0]] ?? 0;
+            for (let j = 0; j < unitsInOrder.length; j++) {
+                let unitCount = unitsInTown[unitsInOrder[j][0]] ?? 0;
                 //+ ITowns.towns[town.id].getUnitOrdersCollection().getNumberOfUnitsFromRunningOrders(unitsInOrder[j][0]);
-                var toSend = Math.floor(unitCount / unitsInOrder[j][1])
+                let toSend = Math.floor(unitCount / unitsInOrder[j][1])
                 if (attacksToSend > toSend) {
                     attacksToSend = toSend;
                 }
             }
             if (attacksToSend > 0) {
-                var data = structuredClone(spam.units);
+                let data = structuredClone(spam.units);
                 data.town_id = town.id;
                 data.id = spam.townId;
                 data.type = "attack";
@@ -782,8 +902,8 @@ class GroupTownTasks {
     async CheckTasks(town) {
         await this.CheckSpamAttacks(town);
 
-        var taskRes = { needed: false, done: false };
-        for (var i = 0; i < this.Tasks.length; i++) {
+        let taskRes = { needed: false, done: false };
+        for (let i = 0; i < this.Tasks.length; i++) {
             taskRes = await this.Tasks[i].CheckTry(town, this);
             if (taskRes.needed) {
                 break;
@@ -791,33 +911,34 @@ class GroupTownTasks {
         }
 
         if (taskRes.done) {
-            return;
+            return{TasksDone:taskRes.needed};
         }
         if (taskRes.needed && !taskRes.canRecruit) {
 
-            return;
+            return{TasksDone:taskRes.needed};
         }
         if(((town.attributes.wood*10)/town.attributes.storage)>8&&((town.attributes.iron*10)/town.attributes.storage)>8&&((town.attributes.stone*10)/town.attributes.storage)>8)
         {
-            var units= await this.CheckUnits(town);
+            let units= await this.CheckUnits(town);
             if(units===undefined||Object.entries(units).length==0)
             {
                 if(town.getBuildings().getBuildingLevel("academy")>=30&&town.attributes.wood>15000&&town.attributes.iron>15000&&town.attributes.stone>18000 && !us.any(MM.status().models.Celebration,celeb=>celeb.getTownId()==town.id&&celeb.getCelebrationType()=="party"))
                 {
                     await gpAjax.ajaxPost('town_overviews', 'start_celebration', { celebration_type: "party","town_id":town.id });
                 }
+                return{TasksDone:taskRes.needed};
             }
-            return units;
+            return {Units:units,TasksDone:taskRes.needed};
         }
     }
     async CheckUnits(town)
     {
-        var unitsInTown=this.GetTotalUnits(ITowns.towns[town.id]);
-        for (var i = 0; i < this.Units.length; i++) {
-            var recruitInfo = Object.entries(this.Units[i].units).map(x=>{return {unitType:x[0],needed:x[1],existing:(unitsInTown[x[0]]??0)}}).sort((x,y)=>(y.needed*100/y.existing)-(x.needed*100/x.existing))[0];
+        let unitsInTown=this.GetTotalUnits(ITowns.towns[town.id]);
+        for (let i = 0; i < this.Units.length; i++) {
+            let recruitInfo = Object.entries(this.Units[i].units).map(x=>{return {unitType:x[0],needed:x[1],existing:(unitsInTown[x[0]]??0)}}).sort((x,y)=>(y.needed*100/y.existing)-(x.needed*100/x.existing))[0];
             if(recruitInfo.needed>recruitInfo.existing)
             {
-                var unitInfo=GameData.units[recruitInfo.unitType];
+                let unitInfo=GameData.units[recruitInfo.unitType];
                 if(unitInfo.research_dependencies.length>0&&!town.researches().hasResearch(unitInfo.research_dependencies[0]))
                 {
                     return;
@@ -830,8 +951,8 @@ class GroupTownTasks {
                 {
                     return;
                 }
-                var buildingDependencies=Object.entries(unitInfo.building_dependencies??{});
-                for(var j=0;j<buildingDependencies.length;j++)
+                let buildingDependencies=Object.entries(unitInfo.building_dependencies??{});
+                for(let j=0;j<buildingDependencies.length;j++)
                 {
                     if(town.getBuildings().getBuildingLevel(buildingDependencies[j][0])<buildingDependencies[j][1])
                     {
@@ -839,12 +960,12 @@ class GroupTownTasks {
                         return;
                     }
                 }
-                var existingCount=unitInfo.is_naval?ITowns.towns[town.id].getUnitOrdersCollection().getNavalUnitOrdersCount():ITowns.towns[town.id].getUnitOrdersCollection().getGroundUnitOrdersCount();
+                let existingCount=unitInfo.is_naval?ITowns.towns[town.id].getUnitOrdersCollection().getNavalUnitOrdersCount():ITowns.towns[town.id].getUnitOrdersCollection().getGroundUnitOrdersCount();
                 if(existingCount>=6)
                 {
                     return;
                 }
-                var amount=recruitInfo.needed-recruitInfo.existing;
+                let amount=recruitInfo.needed-recruitInfo.existing;
                 if(amount>Math.floor(town.getAvailablePopulation()/unitInfo.population))
                 {
                     amount=Math.floor(town.getAvailablePopulation()/unitInfo.population);
@@ -865,7 +986,7 @@ class GroupTownTasks {
                 {
                     return;
                 }
-                var retVal={};
+                let retVal={};
                 retVal[recruitInfo.unitType]=amount;
                 return retVal;
             }
@@ -873,11 +994,11 @@ class GroupTownTasks {
     }
     GetTotalUnits(townObj)
     {
-        var unitsInTown=Object.entries(townObj.units());
-        var unitsOuter=Object.entries(townObj.unitsOuter());
-        var unitOrders=townObj.getUnitOrdersCollection().getAllOrders();
-        var retVal=new Object();
-        for(var i =0;i<unitsInTown.length;i++)
+        let unitsInTown=Object.entries(townObj.units());
+        let unitsOuter=Object.entries(townObj.unitsOuter());
+        let unitOrders=townObj.getUnitOrdersCollection().getAllOrders();
+        let retVal=new Object();
+        for(let i =0;i<unitsInTown.length;i++)
         {
             retVal[unitsInTown[i][0]]=(retVal[unitsInTown[i][0]]??0)+unitsInTown[i][1];
         }
@@ -892,4 +1013,3 @@ class GroupTownTasks {
         return retVal;
     }
 }
-
