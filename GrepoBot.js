@@ -77,7 +77,7 @@ class GrepoBot {
             }
             let towns = ITowns.towns_collection.map(x => x);
             let massRecruit={};
-            let groups=us.map(this.Config.Groups,tasks=>{return{towns:ITowns.townGroups.getGroups().find(x=>x.name==tasks.GroupName)?.towns,tasks:tasks}}).filter(x=>x.towns!=undefined);
+            let groups=us.map(this.Config.Groups,tasks=>{return{towns:ITowns.town_groups.find(x=>x.name==tasks.GroupName)?.towns,tasks:tasks}}).filter(x=>x.towns!=undefined);
             let doRecruit=false;
             let resourceLimits=towns.map(x=>{return {townId:x.id,minwood:14500,minstone:17500,miniron:14500,maxwood:17000,maxstone:20000,maxiron:17000}})
             for (let town of towns) {
