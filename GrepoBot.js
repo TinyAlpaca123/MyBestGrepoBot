@@ -40,10 +40,7 @@ class GrepoBot {
     async Init()
     {         
         window.GrepoBot = this;
-        this.SubscribeToGod("ares");
-        this.SubscribeToGod("zeus");
-        this.SubscribeToGod("hera");
-        this.SubscribeToGod("artemis");
+        this.SubscribeToGods("ares");
         this.DoIt();
         this.DoItQueue();
     }
@@ -178,11 +175,14 @@ class GrepoBot {
         }
 
     }
-    SubscribeToGod(god)
+    SubscribeToGods()
     {
-        let gods=us.find(MM.getModels().PlayerGods,x=>true);
-        this.OnFavorChanged(god,gods.attributes[god+"_favor"]);
-        gods.onGodFavorChange(gods,god,(x,y,z)=>this.OnFavorChanged(god,y))
+        for(let god in Game.gods_active)
+        {
+            let gods=us.find(MM.getModels().PlayerGods,x=>true);
+            this.OnFavorChanged(god,gods.attributes[god+"_favor"]);
+            gods.onGodFavorChange(gods,god,(x,y,z)=>this.OnFavorChanged(god,y))
+        }
     }
 
     async TryRecruitSpecialUnits(town,god,favor)
