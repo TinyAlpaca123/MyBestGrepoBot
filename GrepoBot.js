@@ -31,13 +31,13 @@ class GrepoBot {
     }
     async DoIt()
     {
-        setTimeout(this.DoIt, 602000);
+        setTimeout(()=>this.DoIt(), 602000);
         this.RunBot();
     }
     async DoItQueue()
     {
-        setTimeout(this.DoItQueue, 10000);
-        if(!config.DoQueue)
+        setTimeout(()=>this.DoItQueue(), 10000);
+        if(!this.Config.DoQueue)
         {
             return;
         }
@@ -83,9 +83,9 @@ class GrepoBot {
             let massRecruit={};
             let groups=us.map(ITowns.townGroups.getGroups(),group=>{return {towns:group.towns,tasks:this.Config.Groups.find(x=>x.GroupName==group.name)}}).filter(x=>x.tasks!=undefined);
             let doRecruit=false;
-            let resourceLimits=towns.map(x=>{return {townId:x.id,minwood:1450,minstone:1750,miniron:1450,maxwood:1700,maxstone:2000,maxiron:1700}})
+            let resourceLimits=towns.map(x=>{return {townId:x.id,minwood:14500,minstone:17500,miniron:14500,maxwood:17000,maxstone:20000,maxiron:17000}})
             for (let town of towns) {
-                try {;
+                try {
                     if(us.any(MM.getModels().Takeover,x=>x.attributes.destination_town.id==town.id))
                     {
                         console.info("conquest "+town.id+" "+town.attributes.name)
@@ -111,9 +111,9 @@ class GrepoBot {
                         doRecruit=true;
                         massRecruit[town.id]=result.Units;
                     }
-                     if(!result.TasksDone)
+                    if(result.TasksDone)
                      {
-                         let limit=resourceLimits.find(x=>x.townId=town.id);
+                         let limit=resourceLimits.find(x=>x.townId==town.id);
                          let minValue=town.attributes.storage*0.8;
                          let maxValue=town.attributes.storage*0.9;
                          if(town.attributes.storage<20000)
@@ -128,6 +128,10 @@ class GrepoBot {
                          limit.maxstone=maxValue;
                          limit.maxiron=maxValue;
                      }
+                    else
+                    {
+                        let asdf="asdf";
+                    }
                 } catch (ex) {
                     console.error(ex);
 
@@ -266,6 +270,7 @@ class GrepoBot {
     };
     async FarmTown() {
         let towns = ITowns.towns_collection.filter(function (x) {
+            return (x.attributes.storage * 3 - x.attributes.resources.iron - x.attributes.resources.wood - x.attributes.resources.stone) > 100;
             if (x.attributes.storage < 10000) {
                 return (x.attributes.storage * 3 - x.attributes.resources.iron - x.attributes.resources.wood - x.attributes.resources.stone) > 100;
             }
@@ -275,11 +280,13 @@ class GrepoBot {
         });
         if (towns.length > 0) {
             await gpAjax.ajaxPost('farm_town_overviews', 'claim_loads_multiple',
-                                  {
-                towns: towns,
-                time_option_base: "300", time_option_booty: "600", claim_factor: "normal"
-            }
-                                 );
+                {
+                    towns: towns,
+                    time_option_base: "300", 
+                    time_option_booty: "600", 
+                    claim_factor: "normal"
+                }
+            );
         }
     }
     async TradeInternal(resourceLimits) {
@@ -300,14 +307,14 @@ class GrepoBot {
                         resources[res]+=x.res[res]
                     }
                 });
-            let limits=resourceLimits.find(x=>x.townId=town.id);
+            let limits=resourceLimits.find(x=>x.townId==town.id);
             let overFlow={};
             let needed={};
             let totalOverFlow=0;
             let totalNeeded=0
             for(let res in resources)
             {
-                let needRes=resources[res]-limits["min"+res];
+                let needRes=limits["min"+res]-resources[res];
                 if(needRes<500)
                 {
                     needRes=0;
@@ -316,7 +323,11 @@ class GrepoBot {
                 totalNeeded+=needRes;
                 
                 let overRes=resources[res]-limits["max"+res];
-                 if(overRes<500)
+                if(overRes>town.attributes.resources[res])
+                {
+                    overRes=town.attributes.resources[res];
+                }
+                 if(overRes<500||town.attributes.total_trade_capacity<6000)
                 {
                     overRes=0;
                 }
@@ -335,6 +346,10 @@ class GrepoBot {
         });
 
         const getDistance=(function(town1, town2) {
+            if(!town1||!town2||!town1.attributes||!town2.attributes)
+            {
+                return 1000000;
+            }
           const dx = town1.attributes.abs_x - town2.attributes.abs_x;
           const dy = town1.attributes.abs_y - town2.attributes.abs_y;
           return Math.sqrt(dx * dx + dy * dy);
@@ -342,18 +357,29 @@ class GrepoBot {
 
         const SendResourcesFromTown=(async function(town,allTowns)
             {
+                if(town.town.attributes.available_trade_capacity<1000)
+                {
+                    return;
+                }
                  let resources=new Array("wood","iron","stone");
                  var townsWithDistance=[...allTowns].filter(x=>x.town!=town.town)
                     .sort((a, b) => {
-                      return getDistance(townData.town, a.town) - getDistance(townData.town, b.town);
+                      return getDistance(town.town, a.town) - getDistance(town.town, b.town);
                     });
-                for(let townReceive in townsWithDistance)
+                for(let j=0;j<townsWithDistance.length;j++)
                 {
+                    
+                    let townReceive=townsWithDistance[j];
                     let resources=new Array("wood","iron","stone");
                     let totalSend=0;
                     let sendRes={};
-                    for(let res in resources)
+                    for(let i=0;i< resources.length;i++)
                     {
+                        let res=resources[i];
+                        if(!town.overFlow)
+                        {
+                            let a="";
+                        }
                         if(townReceive.needed[res]>0&&town.overFlow[res]>0)
                         {
                             sendRes[res]=townReceive.needed[res];
@@ -363,293 +389,56 @@ class GrepoBot {
                             }
                             totalSend+=sendRes[res];
                         }
-                    }
-                    if(totalSend>0)
-                    {
-                        if(totalSend>town.attributes.available_trade_capacity)
+                        else
                         {
-                            for(let res in resources)
+                            sendRes[res]=0;
+                        }
+                    }
+                    if(totalSend>500)
+                    {
+                        if(totalSend>town.town.attributes.available_trade_capacity)
+                        {
+                            for(let i=0;i< resources.length;i++)
                             {
-                                sendRes[res]=sendRes[res]/toatlSend*town.attributes.available_trade_capacity;
+                                let res=resources[i];
+                                sendRes[res]=sendRes[res]/totalSend*town.town.attributes.available_trade_capacity;
                             }
                         }
-                        for(let res in resources)
+                        let sending=0;
+                        for(let i=0;i< resources.length;i++)
                         {
-                            sendRes[res]=Math.floor(sendRes[res]/toatlSend*town.attributes.available_trade_capacity);
+                            let res=resources[i];
+                            sendRes[res]=Math.floor(sendRes[res]);
+                            
+                            townReceive.needed[res]-=sendRes[res];
+                            sending+=sendRes[res];
                         }
-                        sendRes.id=townReceive.id;
-                        sendRes.town_id=town.id;
-                        await gpAjax.ajaxPost('town_info', 'trade',sendRes);
+                        if(sending<100)
+                        {
+                            let asdf="asdf";
+                        }
+                        sendRes.id=townReceive.town.id;
+                        sendRes.town_id=town.town.id;
+                        let resp=await gpAjax.ajaxPost('town_info', 'trade',sendRes);  
+                        if(!resp.includes("success"))
+                        {
+                            let asdf="asdf";
+                        }
+                        await(new Promise(resolve => setTimeout(resolve, 300)));
+
                         return;
                     }
                 }
             });
         let giveTowns=townData.filter(x=>x.totalOverFlow>0);
-        let receiveTowns=allTowns.filter(x=>x.totalNeeded>0);
-        for(let town in giveTows)
-            {
-               await SendResourcesFromTown(town,receiveTowns)
-            }
+        let receiveTowns=townData.filter(x=>x.totalNeeded>0);
+        for(let i=0;i<giveTowns.length;i++)
+        {
+            let town=giveTowns[i];
+           await SendResourcesFromTown(town,receiveTowns)
+        }
         return;
-        let giveWood = ITowns.towns_collection.filter(function (x) {
-            let tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
-            let wood = x.attributes.resources.wood;
-            tradeMovements.forEach(trade => {
-                wood += trade.res.wood;
-
-            });
-            if (x.attributes.max_trade_capacity < 2500) {
-                return false;
-
-            }
-            x.wood = wood;
-            if (x.attributes.available_population > 100) {
-                return x.attributes.resources.wood > 25000
-            }
-            return x.attributes.resources.wood > 21000;
-
-        }
-                                                     ).map(function (x) {
-            let amount = x.attributes.resources.wood - 20000;
-            if (x.attributes.available_population > 100) {
-                amount = x.attributes.resources.wood - 24000;
-
-            }
-            return { id: x.id, amount: amount, town: x };
-
-        }
-                                                          ).sort(function (x, y) {
-            return y.amount - x.amount
-        }
-                                                                );
-
-        let getWood = ITowns.towns_collection.filter(function (x) {
-            if (x.attributes.storage < 18000) {
-                return x.wood < (x.attributes.storage - 2000);
-
-            }
-            return x.wood < 18000
-        }
-                                                    ).map(function (x) {
-            if (x.attributes.storage < 18000) {
-                return { id: x.id, amount: x.attributes.storage - x.wood - 2000, town: x };
-
-            }
-            return { id: x.id, amount: 18000 - x.wood, town: x };
-        }
-                                                         );
-        for (let i = 0; i < giveWood.length; i++) {
-            if (getWood.length == 0) {
-                continue;
-
-            }
-            getWood = getWood.sort(function (x, y) {
-                return y.amount - x.amount
-            }
-                                  );
-            let getIt = getWood[0];
-            let send = giveWood[i];
-            let amount = send.town.attributes.max_trade_capacity / 3;
-            if (amount <= 1000) {
-                amount = send.town.attributes.max_trade_capacity;
-
-            }
-            if (getIt.amount < amount) {
-                amount = getIt.amount;
-
-            }
-            if (send.town.attributes.available_trade_capacity < amount) {
-                amount = send.town.attributes.available_trade_capacity;
-
-            }
-            if (send.amount < amount) {
-                amount = send.amount;
-
-            }
-            if (amount >= 5000) {
-                console.info(send.town.getName() + " to " + getIt.town.getName() + amount + " wood");
-                await gpAjax.ajaxPost('town_info', 'trade',
-                                      {
-                    id: getIt.id, wood: amount, stone: 0, iron: 0, town_id: send.id
-                }
-                                     );
-                getIt.amount -= amount;
-
-            }
-
-        }
-
-        let giveStone = ITowns.towns_collection.filter(function (x) {
-            let tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
-            let stone = x.attributes.resources.stone;
-            tradeMovements.forEach(trade => {
-                stone += trade.res.stone;
-
-            }
-                                  );
-            if (x.attributes.max_trade_capacity < 2500) {
-                return false;
-
-            }
-            x.stone = stone;
-            if (x.attributes.available_population > 100) {
-                return x.attributes.resources.stone > 25000
-            }
-            return x.attributes.resources.stone > 21000;
-
-        }
-                                                      ).map(function (x) {
-            let amount = x.attributes.resources.stone - 20000;
-            if (x.attributes.available_population > 100) {
-                amount = x.attributes.resources.stone - 24000;
-
-            }
-            return { id: x.id, amount: amount, town: x };
-
-        }
-                                                           ).sort(function (x, y) { return y.amount - x.amount });
-        let getStone = ITowns.towns_collection.filter(function (x) {
-            if (x.attributes.storage < 18000) {
-                return x.stone < (x.attributes.storage - 2000);
-
-            }
-            return x.stone < 18000;
-
-        }
-                                                     ).map(function (x) {
-            if (x.attributes.storage < 18000) {
-                return { id: x.id, amount: x.attributes.storage - x.stone - 2000, town: x };
-
-            }
-            return { id: x.id, amount: 18000 - x.stone, town: x }
-        });
-        for (i = 0; i < giveStone.length; i++) {
-            if (getStone.length == 0) {
-                continue;
-            }
-            getStone = getStone.sort(function (x, y) {
-                return y.amount - x.amount
-            }
-                                    );
-            getIt = getStone[0];
-            send = giveStone[i];
-            amount = send.town.attributes.max_trade_capacity / 3;
-            if (amount <= 1000) {
-                amount = send.town.attributes.max_trade_capacity;
-
-            }
-            if (getIt.amount < amount) {
-                amount = getIt.amount;
-
-            }
-            if (send.town.attributes.available_trade_capacity < amount) {
-                amount = send.town.attributes.available_trade_capacity;
-
-            }
-            if (send.amount < amount) {
-                amount = send.amount;
-
-            }
-            if (amount >= 5000) {
-                console.info(send.town.getName() + " to " + getIt.town.getName() + " -> " + amount + " stone");
-                await gpAjax.ajaxPost('town_info', 'trade',
-                                      {
-                    id: getIt.id, stone: amount, wood: 0, iron: 0, town_id: send.id
-                }
-                                     );
-                getIt.amount -= amount;
-
-            }
-
-        }
-
-        let giveIron = ITowns.towns_collection.filter(function (x) {
-            let tradeMovements = movements.filter(y => y.idTo == x.attributes.id);
-            let iron = x.attributes.resources.iron;
-            tradeMovements.forEach(trade => {
-                iron += trade.res.iron;
-
-            }
-                                  );
-            if (x.attributes.max_trade_capacity < 2500) {
-                return false;
-
-            }
-            x.iron = iron;
-            if (x.attributes.available_population > 100) {
-                return x.attributes.resources.iron > 25000
-            }
-            return x.attributes.resources.iron > 21000;
-
-        }
-                                                     ).map(function (x) {
-            let amount = x.attributes.resources.iron - 20000;
-            if (x.attributes.available_population > 100) {
-                amount = x.attributes.resources.iron - 24000;
-
-            }
-            return { id: x.id, amount: amount, town: x };
-
-        }
-                                                          ).sort(function (x, y) {
-            return y.amount - x.amount
-        }
-                                                                );
-        ;
-        let getIron = ITowns.towns_collection.filter(function (x) {
-            if (x.attributes.storage < 18000) {
-                return x.iron < (x.attributes.storage - 2000);
-
-            }
-            return x.iron < 18000;
-
-        }
-                                                    ).map(function (x) {
-            if (x.attributes.storage < 18000) {
-                return { id: x.id, amount: x.attributes.storage - x.iron - 1000, town: x };
-            }
-            return { id: x.id, amount: 18000 - x.iron, town: x };
-
-        });
-        for (i = 0; i < giveIron.length; i++) {
-            if (getIron.length == 0) {
-                continue;
-
-            }
-            getIron = getIron.sort(function (x, y) {
-                return y.amount - x.amount
-            }
-                                  );
-            getIt = getIron[0];
-            send = giveIron[i];
-            amount = send.town.attributes.max_trade_capacity / 3;
-            if (amount <= 1000) {
-                amount = send.town.attributes.max_trade_capacity;
-
-            }
-            if (getIt.amount < amount) {
-                amount = getIt.amount;
-
-            }
-            if (send.town.attributes.available_trade_capacity < amount) {
-                amount = send.town.attributes.available_trade_capacity;
-
-            }
-            if (send.amount < amount) {
-                amount = send.amount;
-
-            }
-            if (amount >= 5000) {
-                console.info(send.town.getName() + " to " + getIt.town.getName() + amount + " iron");
-                await gpAjax.ajaxPost('town_info', 'trade',
-                                      {
-                    id: getIt.id, iron: amount, wood: 0, stone: 0, town_id: send.id
-                }
-                                     );
-                getIt.amount -= amount;
-
-            }
-        }
+        
     }
 }
 class GroupTask {
@@ -662,15 +451,18 @@ class GroupTask {
         this.Choice = choice;
     }
     async CheckTry(town) {
+        let retVal={};
         if (this.TaskType == "build") {
-            return await this.CheckBuilding(town, this.Choice, this.Level);
+            retVal= await this.CheckBuilding(town, this.Choice, this.Level);
         }
         else if (this.TaskType == "research") {
-            return await this.CheckResearch(town, this.Choice);
+            retVal= await this.CheckResearch(town, this.Choice);
         }
         else if (this.TaskType == "deconstruct") {
-            return await this.CheckDeconstruct(town, this.Choice, this.Level);
+            retVal= await this.CheckDeconstruct(town, this.Choice, this.Level);
         }
+        retVal.Task=this;
+        return retVal;
     }
 
     async CheckDeconstruct(town,choice,level)
@@ -910,11 +702,11 @@ class GroupTownTasks {
         }
 
         if (taskRes.done) {
-            return{TasksDone:taskRes.needed};
+            return{TasksDone:taskRes.needed==false};
         }
         if (taskRes.needed && !taskRes.canRecruit) {
 
-            return{TasksDone:taskRes.needed};
+            return{TasksDone:taskRes.needed==false};
         }
         if(((town.attributes.wood*10)/town.attributes.storage)>8&&((town.attributes.iron*10)/town.attributes.storage)>8&&((town.attributes.stone*10)/town.attributes.storage)>8)
         {
@@ -923,12 +715,13 @@ class GroupTownTasks {
             {
                 if(town.getBuildings().getBuildingLevel("academy")>=30&&town.attributes.wood>15000&&town.attributes.iron>15000&&town.attributes.stone>18000 && !us.any(MM.status().models.Celebration,celeb=>celeb.getTownId()==town.id&&celeb.getCelebrationType()=="party"))
                 {
-                    await gpAjax.ajaxPost('town_overviews', 'start_celebration', { celebration_type: "party","town_id":town.id });
+                    //await gpAjax.ajaxPost('town_overviews', 'start_celebration', { celebration_type: "party","town_id":town.id });
                 }
-                return{TasksDone:taskRes.needed};
+                return{TasksDone:taskRes.needed==false};
             }
-            return {Units:units,TasksDone:taskRes.needed};
+            return {Units:units,TasksDone:taskRes.needed==false};
         }
+         return{TasksDone:taskRes.needed==false};
     }
     async CheckUnits(town)
     {
