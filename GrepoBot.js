@@ -45,7 +45,7 @@ class GrepoBot {
         this.SubscribeToGod("hera");
         this.SubscribeToGod("artemis");
         this.DoIt();
-        this.DoItQueue();       
+        this.DoItQueue();
     }
     async CheckQueue()
     {
