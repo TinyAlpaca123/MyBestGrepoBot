@@ -110,7 +110,7 @@ class GrepoBot {
                         doRecruit=true;
                         massRecruit[town.id]=result.Units;
                     }
-                    if(result.TasksDone)
+                    if(!result.TasksDone)
                      {
                          let limit=resourceLimits.find(x=>x.townId==town.id);
                          let minValue=town.attributes.storage*0.8;
@@ -633,29 +633,29 @@ class GroupTownTasks {
         this.Tasks = new Array(0);
     }
     AddBuilding(building, level) {
-        this.Tasks[this.Tasks.length] = new GroupTask("build", building, level, this);
+        this.Tasks.push(new GroupTask("build", building, level, this));
         return this;
     }
     AddResearch(research) {
-        this.Tasks[this.Tasks.length] = new GroupTask("research", research, 1, this);
+        this.Tasks.push(new GroupTask("research", research, 1, this));
         return this;
     }
     AddDeconstruction(building, level) {
-        this.Tasks[this.Tasks.length] = new GroupTask("deconstruct", building, level, this);
+        this.Tasks.push(new GroupTask("deconstruct", building, level, this));
         return this;
     }
     AddUnits(priority, units) {
-        this.Units[this.Units.length] = { priority: priority, units: units };
+        this.Units.push({ priority: priority, units: units });
         this.Units = this.Units.sort((a, b) => a.priority - b.priority);
         return this;
     }
     AddSpamAttack(townId, units) {
-        this.SpamAttacks[this.SpamAttacks.length] = { townId: townId, units: units };
+        this.SpamAttacks.push({ townId: townId, units: units });
         return this;
     }
     AddSpecialUnit(unitType)
     {
-        this.SpecialUnits[this.SpecialUnits.length]=GameData.units[unitType];
+        this.SpecialUnits.push(GameData.units[unitType]);
         return this;
     }
     AddFarmUnit(unit) {
@@ -699,15 +699,18 @@ class GroupTownTasks {
                 break;
             }
         }
-
-        if (taskRes.done) {
-            return{TasksDone:taskRes.needed==false};
+        let retVal={TasksDone:taskRes.needed==false};
+        if (taskRes.done||
+           (taskRes.needed && !taskRes.canRecruit)) {
+            return retVal;
         }
-        if (taskRes.needed && !taskRes.canRecruit) {
-
-            return{TasksDone:taskRes.needed==false};
+        let totalUnits=this.GetTotalUnits(ITowns.towns[town.id]);
+        let allUnitsDone=Units.every(x=>Object.keys(x.units).every(y=>totalUnits[y]>=x.units[y]));
+        if(!allUnitsDone)
+        {
+            retVal.TasksDone=false;
         }
-        if(((town.attributes.wood*10)/town.attributes.storage)>8&&((town.attributes.iron*10)/town.attributes.storage)>8&&((town.attributes.stone*10)/town.attributes.storage)>8)
+        else if(((town.attributes.wood*10)/town.attributes.storage)>8&&((town.attributes.iron*10)/town.attributes.storage)>8&&((town.attributes.stone*10)/town.attributes.storage)>8)
         {
             let units= await this.CheckUnits(town);
             if(units===undefined||Object.entries(units).length==0)
@@ -716,11 +719,13 @@ class GroupTownTasks {
                 {
                     //await gpAjax.ajaxPost('town_overviews', 'start_celebration', { celebration_type: "party","town_id":town.id });
                 }
-                return{TasksDone:taskRes.needed==false};
+                return retVal;
             }
-            return {Units:units,TasksDone:taskRes.needed==false};
+            retVal.Units=units;
+            return retVal;
         }
-         return{TasksDone:taskRes.needed==false};
+        
+         return retVal;
     }
     async CheckUnits(town)
     {
