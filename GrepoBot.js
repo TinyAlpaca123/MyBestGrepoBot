@@ -38,7 +38,8 @@ class GrepoBot {
         this.CheckQueue();
     }
     async Init()
-    { 
+    {         
+        window.GrepoBot = this;
         this.SubscribeToGod("ares");
         this.SubscribeToGod("zeus");
         this.SubscribeToGod("hera");
