@@ -22,12 +22,6 @@ class GrepoBot {
         let SpamDestinations={TinyAlpaca:{de155:13722,de157:3428},suchtla95:{}};
 
         window.GrepoBot = this;
-        
-        this.SubscribeToGod("ares");
-        this.SubscribeToGod("zeus");
-        this.SubscribeToGod("hera");
-        this.SubscribeToGod("artemis");
-
     }
     async DoIt()
     {
@@ -44,9 +38,13 @@ class GrepoBot {
         this.CheckQueue();
     }
     async Init()
-    {
+    { 
+        this.SubscribeToGod("ares");
+        this.SubscribeToGod("zeus");
+        this.SubscribeToGod("hera");
+        this.SubscribeToGod("artemis");
         this.DoIt();
-        this.DoItQueue();
+        this.DoItQueue();       
     }
     async CheckQueue()
     {
