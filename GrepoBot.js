@@ -473,7 +473,7 @@ class GroupTask {
         if ((buildingLevel-us.filter(MM.getModels().BuildingOrder,order=>order.attributes.town_id==town.id&&order.attributes.tear_down&&order.attributes.building_type==choice).length) <= level) {
             return { needed: false, done: false };
         }
-        if (ITowns.towns[town.id].buildingOrders().length>=6) {
+        if (ITowns.towns[town.id].buildingOrders().length>=7) {
             return { needed: true, done: false, canRecruit: true };
         }
 
