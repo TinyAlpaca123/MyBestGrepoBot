@@ -77,7 +77,7 @@ class GrepoBot {
             }
             let towns = ITowns.towns_collection.map(x => x);
             let massRecruit={};
-            let groups=us.map(this.Config.Groups,tasks=>{return{towns:ITowns.town_group_towns.find(x=>x.attributes.group_id==ITowns.town_groups.find(x=>x.attributes.name==tasks.GroupName)?.id)?.towns,tasks:tasks}}).filter(x=>x.towns!=undefined);
+            let groups=us.map(this.Config.Groups,tasks=>{return{groupId:ITowns.town_groups.find(x=>x.attributes.name==tasks.GroupName)?.id,tasks:tasks}}).filter(x=>x.groupId);
             let doRecruit=false;
             let resourceLimits=towns.map(x=>{return {townId:x.id,minwood:14500,minstone:17500,miniron:14500,maxwood:17000,maxstone:20000,maxiron:17000}})
             for (let town of towns) {
@@ -93,7 +93,7 @@ class GrepoBot {
                     }
                     else
                     {
-                        group=groups.find(gr=>gr.towns[town.id]!=undefined);
+                        group=groups.find(gr=>ITowns.town_group_towns.find(x=>x.attributes.town_id==town.id&&x.attributes.group_id==gr.groupId));
                         if(group==undefined)
                         {
                             console.info("no Group "+town.id);
