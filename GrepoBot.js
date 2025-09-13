@@ -705,7 +705,7 @@ class GroupTownTasks {
             return retVal;
         }
         let totalUnits=this.GetTotalUnits(ITowns.towns[town.id]);
-        let allUnitsDone=Units.every(x=>Object.keys(x.units).every(y=>totalUnits[y]>=x.units[y]));
+        let allUnitsDone=this.Units.every(x=>Object.keys(x.units).every(y=>totalUnits[y]>=x.units[y]));
         if(!allUnitsDone)
         {
             retVal.TasksDone=false;
